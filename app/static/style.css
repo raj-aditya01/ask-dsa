@@ -1,0 +1,96 @@
+/* Minimalist custom styles for ASK-DSA Dashboard */
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Markdown content styling */
+.prose-dsa h1, .prose-dsa h2, .prose-dsa h3, .prose-dsa h4 {
+  color: #0f172a;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+.prose-dsa h1 { font-size: 1.5rem; }
+.prose-dsa h2 { font-size: 1.25rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; }
+.prose-dsa h3 { font-size: 1.05rem; }
+.prose-dsa p {
+  color: #334155;
+  line-height: 1.65;
+  margin-bottom: 0.85rem;
+}
+.prose-dsa ul, .prose-dsa ol {
+  margin-left: 1.25rem;
+  margin-bottom: 0.85rem;
+  color: #334155;
+}
+.prose-dsa li {
+  margin-bottom: 0.35rem;
+}
+.prose-dsa code:not(pre code) {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.825rem;
+  background-color: #f1f5f9;
+  color: #3323cc;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.25rem;
+  border: 1px solid #e2e8f0;
+}
+.prose-dsa blockquote {
+  border-left: 3px solid #4f46e5;
+  padding-left: 0.85rem;
+  margin: 0.85rem 0;
+  color: #475569;
+  font-style: italic;
+}
+.prose-dsa table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+.prose-dsa th, .prose-dsa td {
+  border: 1px solid #e2e8f0;
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+}
+.prose-dsa th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Typing cursor animation during streaming */
+.typing-cursor::after {
+  content: '▋';
+  display: inline-block;
+  color: #4f46e5;
+  animation: blink 0.8s infinite;
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}

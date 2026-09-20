@@ -1,0 +1,65 @@
+# =============================================================================
+# Environment & Secrets (NEVER COMMIT SENSITIVE API KEYS)
+# =============================================================================
+.env
+.env.local
+.env.*.local
+*.env
+!*.env.example
+
+# =============================================================================
+# Python & Virtual Environments
+# =============================================================================
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# C extensions
+*.obj
+*.pyd
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =============================================================================
+# Testing & Code Quality
+# =============================================================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.log
+
+# =============================================================================
+# Evaluation Artifacts & Raw Dumps
+# =============================================================================
+evaluation/data/retrieval_results.jsonl
+evaluation/data/failure_report.jsonl
+archive.zip
+archive/
+
+# =============================================================================
+# IDE & Operating System Files
+# =============================================================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

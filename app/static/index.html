@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>ASK-DSA | AI Tutor & Problem Retrieval Engine</title>
+
+  <!-- Google Fonts & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Geist', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            primary: {
+              DEFAULT: '#3525cd',
+              container: '#4f46e5',
+              hover: '#4338ca',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Marked.js for Markdown & Highlight.js for Syntax Highlighting -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css"/>
+</head>
+
+<body class="bg-[#F8F9FF] font-sans text-[#0B1C30] min-h-screen flex flex-col antialiased selection:bg-indigo-100 selection:text-indigo-900">
+
+  <!-- ==================== HEADER ==================== -->
+  <header class="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <div class="h-14 w-full px-4 sm:px-6 flex items-center justify-between gap-4 max-w-7xl mx-auto">
+      
+      <!-- Brand & Status -->
+      <div class="flex items-center gap-4 flex-shrink-0">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+            <span class="material-symbols-outlined text-[18px]">terminal</span>
+          </div>
+          <div class="flex flex-col leading-none">
+            <span class="text-base font-bold tracking-tight text-slate-900">ASK-DSA</span>
+            <span class="text-[11px] text-slate-500">DSA Tutor & Semantic Search</span>
+          </div>
+        </div>
+
+        <!-- Dynamic Health Pill -->
+        <div id="health-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-600 font-mono">
+          <span class="relative flex h-2 w-2">
+            <span id="health-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span id="health-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="health-text">Connecting...</span>
+        </div>
+      </div>
+
+      <!-- Quick Examples -->
+      <div class="hidden xl:flex items-center gap-1.5 text-xs">
+        <span class="text-slate-400 font-medium mr-1">Examples:</span>
+        <button class="example-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono border border-slate-200 transition-colors" data-query="How to detect a cycle in a linked list?">Floyd Cycle</button>
+        <button class="example-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono border border-slate-200 transition-colors" data-query="How to solve the Two Sum problem?">Two Sum</button>
+        <button class="example-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono border border-slate-200 transition-colors" data-query="Explain the LRU Cache design and implementation">LRU Cache</button>
+        <button class="example-btn px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-mono border border-slate-200 transition-colors" data-query="Explain Best Time to Buy and Sell Stock III">Stock III</button>
+      </div>
+
+      <!-- Navigation & Links -->
+      <div class="flex items-center gap-2">
+        <a href="/docs" target="_blank" class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition-colors" title="Interactive Swagger API Docs">
+          <span class="material-symbols-outlined text-[16px]">api</span>
+          <span>API Docs</span>
+        </a>
+        <button id="shortcut-hint" class="hidden sm:flex items-center gap-1 px-2 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-500 text-xs font-mono" title="Shortcut">
+          <span class="text-[10px]">Ctrl+K</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="w-full pt-16 flex-1 pb-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col gap-6 pt-4">
+
+      <!-- Operational Tag & Vector Stats -->
+      <div class="flex items-center justify-between text-xs text-slate-500">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono text-[11px] border border-slate-200">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+            ASK-DSA PRODUCTION ENGINE
+          </span>
+          <span class="text-slate-300">/</span>
+          <span class="font-mono text-slate-600">all-MiniLM-L6-v2 • ChromaDB</span>
+        </div>
+
+        <div class="hidden sm:flex items-center gap-3 font-mono text-[11px]">
+          <span class="flex items-center gap-1 text-slate-600">
+            <span class="material-symbols-outlined text-[14px] text-indigo-600">layers</span>
+            BM25 Title-Boosted 3.5x
+          </span>
+          <span class="text-slate-300">•</span>
+          <span class="flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <span class="material-symbols-outlined text-[14px]">bolt</span>
+            Cross-Encoder Reranker Active
+          </span>
+        </div>
+      </div>
+
+      <!-- Omnisearch Bar -->
+      <div class="relative bg-white rounded-2xl shadow-sm border border-slate-200 transition-all duration-200 focus-within:shadow-md focus-within:border-indigo-400">
+        <div class="flex items-center h-14 sm:h-16 px-4 gap-3">
+          <span class="material-symbols-outlined text-slate-400 text-[22px] flex-shrink-0">search</span>
+          <input
+            id="query-input"
+            class="flex-1 bg-transparent text-base sm:text-lg text-slate-900 placeholder:text-slate-400 outline-none border-none font-sans"
+            placeholder="Ask any algorithm question or describe a problem concept..."
+            type="text"
+            value="How to detect a cycle in a linked list?"
+            autocomplete="off"
+          />
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button
+              id="clear-btn"
+              class="hidden sm:flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+              title="Clear input"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+            <button
+              id="retrieve-only-btn"
+              class="hidden md:flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition-colors"
+              title="Only run retrieval & reranking without LLM"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[16px]">format_list_bulleted</span>
+              <span>Search Only</span>
+            </button>
+            <button
+              id="search-btn"
+              class="flex items-center gap-2 px-4 py-2 sm:py-2.5 rounded-xl bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-700 shadow-sm transition-all active:scale-[0.98]"
+              type="button"
+            >
+              <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+              <span>Solve & Stream</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topic Filter Chips -->
+      <div class="flex items-center justify-between gap-3 overflow-x-auto pb-1 text-nowrap select-none text-xs">
+        <div class="flex items-center gap-1.5" id="filter-chips">
+          <button class="topic-chip px-3 py-1 rounded-full bg-indigo-600 text-white font-medium shadow-sm transition-colors" data-topic="">All Topics</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Two Pointers">Two Pointers</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Dynamic Programming">Dynamic Programming</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Graphs">Graphs</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Binary Search">Binary Search</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Tree">Trees</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Sliding Window">Sliding Window</button>
+          <button class="topic-chip px-3 py-1 rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors" data-topic="Linked List">Linked List</button>
+        </div>
+        <div id="active-filter-label" class="hidden sm:flex items-center gap-1 text-slate-400 flex-shrink-0">
+          <span class="material-symbols-outlined text-[14px]">filter_list</span>
+          <span>Showing: <strong class="text-slate-700" id="current-filter-name">All</strong></span>
+        </div>
+      </div>
+
+      <!-- Split-Pane Workspace (Left: 35% Candidates, Right: 65% Solution) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- LEFT: Retrieved Problem Context -->
+        <section class="lg:col-span-5 flex flex-col gap-3">
+          <!-- Panel Header -->
+          <div class="flex items-center justify-between px-1">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-indigo-600 text-[18px]">layers</span>
+              <h2 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Retrieved Context</h2>
+              <span id="results-count" class="w-5 h-5 flex items-center justify-center rounded-full bg-slate-200 text-slate-700 text-xs font-mono font-medium">0</span>
+            </div>
+            <span id="routing-strategy" class="text-[11px] font-mono text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full">Routing: Ready</span>
+          </div>
+
+          <!-- Strategy & Query Routing Diagnostics Card -->
+          <div id="routing-card" class="p-3.5 rounded-xl bg-white border border-slate-200 flex flex-col gap-2 shadow-sm text-xs">
+            <div class="flex items-center justify-between text-slate-600 font-mono">
+              <span class="flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px] text-indigo-600">psychology</span>
+                <span>Strategy: <strong id="diag-strategy" class="text-slate-900">specific_qa</strong></span>
+              </span>
+              <span class="text-emerald-700 font-semibold" id="diag-topic">Topic: Detecting...</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-500 font-mono text-[11px] pt-1 border-t border-slate-100">
+              <span>Cleaned Query: <strong id="diag-query" class="text-slate-700">-</strong></span>
+              <span id="diag-time" class="text-slate-400">0ms</span>
+            </div>
+          </div>
+
+          <!-- Problem Cards List Container -->
+          <div id="cards-container" class="flex flex-col gap-3">
+            <!-- Initial empty placeholder -->
+            <div class="p-8 rounded-xl bg-white border border-dashed border-slate-300 text-center flex flex-col items-center gap-2 text-slate-400 text-xs">
+              <span class="material-symbols-outlined text-[32px] text-slate-300">manage_search</span>
+              <p>Type a question above or click an example to retrieve matching LeetCode problems.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT: Grounded Solution Workspace -->
+        <section class="lg:col-span-7 flex flex-col gap-4">
+          <div class="p-6 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col gap-5 min-h-[520px]">
+            
+            <!-- Solution Header & Tags -->
+            <div class="flex flex-col gap-3 pb-4 border-b border-slate-200">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <span class="px-2.5 py-0.5 rounded bg-indigo-50 text-indigo-700 text-[11px] font-mono font-semibold uppercase tracking-wider border border-indigo-200">
+                  Grounded Solution & Explanation
+                </span>
+                <div class="flex items-center gap-2 text-xs">
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 font-mono text-slate-700 border border-slate-200">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Groq LLM
+                  </span>
+                  <span id="status-pill" class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-mono text-[11px] font-medium border border-emerald-200">
+                    <span class="material-symbols-outlined text-[13px]">verified</span>
+                    Context Verified
+                  </span>
+                </div>
+              </div>
+
+              <h1 id="solution-title" class="text-xl sm:text-2xl font-bold text-slate-900">
+                DSA Solution Workspace
+              </h1>
+
+              <!-- Complexity Summary Badges -->
+              <div id="complexity-badges" class="flex flex-wrap items-center gap-2 pt-1 text-xs font-mono">
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+                  <span class="material-symbols-outlined text-[16px] text-emerald-600">timer</span>
+                  <span class="font-semibold" id="time-badge">Time: O(N)</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-800 border border-indigo-200">
+                  <span class="material-symbols-outlined text-[16px] text-indigo-600">memory</span>
+                  <span class="font-semibold" id="space-badge">Space: O(1)</span>
+                </div>
+                <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 border border-slate-200">
+                  <span class="material-symbols-outlined text-[16px]">verified_user</span>
+                  <span>Grounding: ChromaDB LeetCode</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Solution Markdown Body -->
+            <div id="solution-body" class="prose-dsa font-sans text-sm text-slate-700 leading-relaxed min-h-[260px]">
+              <p class="text-slate-400 italic">Ready. Enter your algorithmic inquiry to generate an optimal step-by-step solution, complexity analysis, and idiomatic Python implementation.</p>
+            </div>
+
+            <!-- Footer Generation Status -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs font-mono text-slate-500">
+              <div class="flex items-center gap-2">
+                <span id="stream-indicator" class="w-2 h-2 rounded-full bg-slate-300"></span>
+                <span id="gen-status-text">Idle</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <span>Latency: <strong id="gen-latency" class="text-slate-700">0ms</strong></span>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ==================== STICKY TELEMETRY FOOTER ==================== -->
+  <footer class="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 py-1.5 px-4 sm:px-6">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 text-xs font-mono text-slate-500">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center gap-1 text-slate-900 font-semibold">
+          <span class="material-symbols-outlined text-[14px] text-amber-500">speed</span>
+          <span>Pipeline Latency:</span>
+        </span>
+        <span>Retrieval: <strong id="stat-retrieval" class="text-slate-800">--</strong></span>
+        <span>•</span>
+        <span>LLM Generation: <strong id="stat-gen" class="text-slate-800">--</strong></span>
+        <span>•</span>
+        <span>Total: <strong id="stat-total" class="text-indigo-600">--</strong></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span>API:</span>
+        <a href="/docs" target="_blank" class="text-indigo-600 hover:underline">localhost:8000/api/v1</a>
+        <span class="px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 text-[10px]">v1.0.0</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core Dashboard Logic -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
