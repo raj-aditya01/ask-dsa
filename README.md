@@ -1,39 +1,44 @@
-# ASK-DSA: Enterprise-Grade RAG AI Tutor for Algorithms
+# ASK-DSA: Enterprise-Grade RAG AI Tutor for Algorithms (MERN Stack Edition)
 
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688.svg)](https://fastapi.tiangolo.com)
-[![ChromaDB](https://img.shields.io/badge/ChromaDB-0.5+-orange.svg)](https://www.trychroma.com)
+[![Node.js 18+](https://img.shields.io/badge/node.js-18+-green.svg)](https://nodejs.org/)
+[![Express.js](https://img.shields.io/badge/Express-4.21+-000000.svg)](https://expressjs.com/)
+[![React](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://react.dev/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg)](https://www.mongodb.com/)
 [![Groq LLM](https://img.shields.io/badge/Groq-Cloud-f55036.svg)](https://groq.com)
-[![Tests](https://img.shields.io/badge/tests-29%20passed%20%7C%20100%25-brightgreen.svg)](tests/)
+[![Jest Tests](https://img.shields.io/badge/tests-19%20passed%20%7C%20100%25-brightgreen.svg)](backend/tests/)
 
-**ASK-DSA** is an intelligent Data Structures & Algorithms (DSA) tutor and problem-retrieval engine. It combines two-stage hybrid search (Title-Boosted BM25 + Dense ChromaDB Vector Search fused via Reciprocal Rank Fusion) with a Cross-Encoder semantic reranker, grounded prompt engineering, and high-throughput Groq LLM answer generation with real-time token streaming.
+**ASK-DSA** is an intelligent Data Structures & Algorithms (DSA) tutor and problem-retrieval engine built on the **MERN (MongoDB, Express.js, React, Node.js)** stack. It combines two-stage hybrid search (Title-Boosted BM25 + Dense Semantic Overlap fused via Reciprocal Rank Fusion) with high-precision reranking, grounded prompt engineering, and high-throughput Groq LLM answer generation with real-time token streaming.
 
 ---
 
 ## Key Features
 
 - **Multi-Field Hybrid Retrieval**: 
-  - Sparse lexical search via **BM25Okapi** (with a 3.5x boost on problem titles and exact-substring match bonuses).
-  - Dense semantic vector search via **ChromaDB** and `sentence-transformers/all-MiniLM-L6-v2`.
-  - **Reciprocal Rank Fusion (RRF)** merging sparse and dense candidate pools into a unified top-40 set.
-- **Stage-2 Cross-Encoder Precision Reranker**:
-  - Re-evaluates candidates using `cross-encoder/ms-marco-MiniLM-L-6-v2` for cross-attention contextual relevance.
+  - Sparse lexical search via **BM25Okapi** (with a 3.5x boost on problem titles and exact-substring match bonuses: +50 for exact match, +20 for substring match).
+  - Semantic candidate generation over 7,638 problem chunks.
+  - **Reciprocal Rank Fusion (RRF)** merging candidate pools into a unified set ($k=60$).
+- **Stage-2 Precision Reranker**:
+  - Re-evaluates candidates for exact title alignment, topic overlap, and contextual relevance.
 - **Adaptive RAG Query Classification**:
   - Classifies user intent into `specific_qa` (high-precision problem resolution) or `exploratory` (diverse multi-technique comparisons).
   - Normalizes aliases (`dp` $\to$ `Dynamic Programming`, `heap` $\to$ `Heap (Priority Queue)`).
-- **Production FastAPI Backend**:
-  - Fully asynchronous with lifespan model pre-warming (zero first-request cold-start penalty).
-  - Standardized JSON responses (RFC 7807) with per-stage latency metrics (`retrieval_ms`, `generation_ms`, `total_ms`).
-  - IP-based rate limiting via SlowAPI and CORS pre-configured.
-- **Built-in Web Dashboard & SSE Streaming**:
-  - Clean, distraction-free Cockpit interface served directly by FastAPI (zero Node/npm build steps required).
+- **Production Express.js & Node.js Backend**:
+  - Fully asynchronous with startup pre-warming.
+  - Standardized JSON responses with per-stage latency metrics (`retrieval_ms`, `generation_ms`, `total_ms`).
+  - IP-based rate limiting via `express-rate-limit` and pre-configured CORS.
+  - Interactive Swagger / OpenAPI UI at `/docs`.
+- **Modern React (Vite + Tailwind CSS) Frontend**:
+  - Clean split-pane workspace (35% retrieved context cards, 65% grounded solution workspace).
   - Real-time Server-Sent Events (SSE) streaming token output.
   - Interactive LeetCode problem cards with topic tags and rerank scores.
   - Formatted Python code blocks with syntax highlighting and one-click clipboard copying.
-- **Interactive Terminal Assistant (`cli.py`)**:
-  - Interactive REPL and one-shot command-line interface.
+  - Global hotkeys (`Ctrl+K` omnisearch focus).
+- **MongoDB & Mongoose Integration**:
+  - `Problem` schema storing 7,638 problem chunks with compound text indexing.
+  - `QueryHistory` schema logging queries, routing diagnostics, and response latencies.
+  - Resilient local fallback (supports MongoDB Atlas, local MongoDB, or MongoMemoryServer).
 - **Automated Test Suite**:
-  - 29 unit, integration, and API tests with 100% pass rate.
+  - 100% pass rate across Jest unit, integration, and API tests.
 
 ---
 
@@ -45,24 +50,24 @@ User Query ("How to detect cycle in linked list?")
        ▼
 ┌────────────────────────────────────────┐
 │  Adaptive Query Classifier & Modifier  │  <-- Strips conversational filler,
-│  (retrieval/query_modifier.py)         │      extracts topics & difficulty
+│  (backend/services/queryModifier.js)   │      extracts topics & difficulty
 └──────────────────┬─────────────────────┘
                    │
          ┌─────────┴─────────┐
          ▼                   ▼
 ┌──────────────────┐ ┌──────────────────┐
-│ Multi-Field BM25 │ │ Dense Vector DB  │
-│ (Title 3.5x)     │ │ (ChromaDB MiniLM)│
+│ Multi-Field BM25 │ │ Semantic Vectors │
+│ (Title 3.5x)     │ │ (7,638 Chunks)   │
 └────────┬─────────┘ └────────┬─────────┘
          │                    │
          └─────────┬──────────┘
                    ▼
 ┌────────────────────────────────────────┐
-│   Reciprocal Rank Fusion (RRF)         │  <-- Top-40 candidate pool
+│   Reciprocal Rank Fusion (RRF, k=60)   │  <-- Candidate Pool
 └──────────────────┬─────────────────────┘
                    ▼
 ┌────────────────────────────────────────┐
-│   Stage-2 Cross-Encoder Reranker       │  <-- ms-marco-MiniLM-L-6-v2
+│   Stage-2 Precision Reranker           │  <-- Title & Cross-relevance scoring
 └──────────────────┬─────────────────────┘
                    ▼
 ┌────────────────────────────────────────┐
@@ -72,153 +77,118 @@ User Query ("How to detect cycle in linked list?")
          ┌─────────┴─────────┐
          ▼                   ▼
 ┌──────────────────┐ ┌──────────────────┐
-│ Web Dashboard    │ │ Groq LLM Client  │  <-- Grounded Prompt Assembly
-│ & OpenAPI Docs   │ │ (Sync / SSE)     │      with Code & Complexity
+│ React Frontend   │ │ Groq LLM Client  │  <-- Grounded Prompt Assembly
+│ & Swagger Docs   │ │ (Sync / SSE)     │      with Code & Complexity
 └──────────────────┘ └──────────────────┘
 ```
 
 ---
 
-## Quick Start on Windows
-
-Follow these steps to spin up the project on your Windows laptop.
+## Quick Start
 
 ### 1. Prerequisites
 
-- **Python 3.11 or higher** installed ([Download from python.org](https://www.python.org/downloads/)).
-  - *Ensure "Add Python to PATH" is checked during installation.*
-- **Git for Windows** installed ([Download git-scm.com](https://git-scm.com/)).
+- **Node.js 18 or higher** installed ([Download nodejs.org](https://nodejs.org/)).
+- **npm** installed (bundled with Node.js).
+- **Git** installed.
 
 ---
 
-### 2. Clone the Repository
+### 2. Install Dependencies
 
-Open **PowerShell** or **Command Prompt** and navigate to your desired directory:
+Install root, backend, and frontend dependencies:
 
-```powershell
-git clone <your-repo-url>
-cd ASK-dsa
+```bash
+# Install root dependencies
+npm install
+
+# Install backend dependencies
+cd backend && npm install && cd ..
+
+# Install frontend dependencies
+cd frontend && npm install && cd ..
+```
+
+Or run the combined installer:
+```bash
+npm run install:all
 ```
 
 ---
 
-### 3. Create & Activate a Virtual Environment
+### 3. Environment Configuration
 
-```powershell
-# Create virtual environment named .venv
-python -m venv .venv
+The backend reads configuration from `backend/.env`.
 
-# Activate the virtual environment
-.venv\Scripts\Activate.ps1
+Create or edit `backend/.env`:
+```ini
+PORT=8000
+MONGODB_URI=mongodb://localhost:27017/askdsa
+GROQ_API_KEY=gsk_your_actual_groq_api_key_here
+GROQ_MODEL=openai/gpt-oss-120b
+DEFAULT_TOP_K=5
+CANDIDATE_K=40
+TEMPERATURE=0.1
+RATE_LIMIT_DEFAULT=60
+RATE_LIMIT_GENERATE=30
 ```
 
-> **PowerShell Execution Policy Note**: If you receive a script execution error on Windows, run this in your PowerShell session:
-> ```powershell
-> Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-> .venv\Scripts\Activate.ps1
-> ```
+*(Get a free Groq API key at [console.groq.com](https://console.groq.com)).*
 
 ---
 
-### 4. Install Dependencies
+### 4. Running the Application
 
-Install all required production and testing dependencies:
+#### Option A: Full MERN Stack (Development Mode)
 
-```powershell
-pip install -r requirements.txt
+Runs both the Express API and Vite React dev server concurrently with hot module reloading:
+
+```bash
+npm run dev
 ```
 
----
+- **React Dashboard**: Open [http://localhost:5173/](http://localhost:5173/)
+- **Express API**: [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health)
+- **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
-### 5. Configure Your Environment Variables
+#### Option B: Production Server (Single Port Deployment)
 
-1. Copy the template environment configuration file:
-   ```powershell
-   copy .env.example .env
-   ```
+Build the React frontend and serve everything directly from the Express backend on port 8000:
 
-2. Open `.env` in any text editor (e.g. Notepad, VS Code) and add your Groq Cloud API key:
-   ```ini
-   GROQ_API_KEY=gsk_your_actual_groq_api_key_here
-   GROQ_MODEL=openai/gpt-oss-120b
-   ```
-   *(Get a free, instant Groq API key at [console.groq.com](https://console.groq.com)).*
+```bash
+# 1. Build the React frontend
+npm run build
 
----
-
-## Running the Application
-
-### Option A: Launch the Web Dashboard & API Server (Recommended)
-
-Start the production Uvicorn server:
-
-```powershell
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+# 2. Start the Express production server
+npm start
 ```
 
-Once the server initializes:
-- **Interactive Web Dashboard**: Open [http://localhost:8000/](http://localhost:8000/) or [http://localhost:8000/dashboard](http://localhost:8000/dashboard) in your browser.
-- **Interactive OpenAPI/Swagger Documentation**: Open [http://localhost:8000/docs](http://localhost:8000/docs).
-- **Health Check & Telemetry**: Open [http://localhost:8000/api/v1/health](http://localhost:8000/api/v1/health).
+Open [http://localhost:8000/](http://localhost:8000/) or [http://localhost:8000/dashboard](http://localhost:8000/dashboard).
 
 ---
 
-### Option B: Interactive Terminal Assistant (`cli.py`)
+### 5. Running Automated Tests
 
-To run the assistant directly in your terminal without opening a browser:
+Run the complete test suite (19 tests covering query modifier, adaptive routing, BM25, RRF fusion, generator formatting, API endpoints, and SSE streaming):
 
-```powershell
-# Interactive chat mode
-python cli.py
+```bash
+npm test
+```
 
-# Direct one-shot question
-python cli.py "How to detect a cycle in a linked list?"
-
-# Clean mode (hide source table and only stream solution)
-python cli.py "Explain LRU Cache" --no-sources
+Or from the `backend/` directory:
+```bash
+cd backend
+npm test
 ```
 
 ---
 
-### Option C: Standalone Generation & Streaming Scripts
+### 6. Seeding MongoDB (Optional)
 
-```powershell
-# Test synchronous retrieval & generation
-python test_generator.py
+To load all 7,638 problem chunks from `data/problem_chunks.json` into your MongoDB instance:
 
-# Test token-by-token terminal streaming
-python test_streaming.py
-
-# Test retrieval-only ranking (without LLM)
-python ingestion/search.py
-```
-
----
-
-## Running Automated Tests
-
-Run the complete test suite (29 tests covering query modification, adaptive routing, BM25, RRF fusion, cross-encoder reranking, generator formatting, API endpoints, and dashboard serving):
-
-```powershell
-pytest -v
-```
-
-To run individual test modules:
-```powershell
-# Test API endpoints and web dashboard serving
-pytest tests/test_api.py -v
-
-# Test Query Modifier and Topic Detection
-pytest tests/test_query_modifier.py -v
-
-# Test Hybrid Retriever (BM25 + Dense + RRF)
-pytest tests/test_hybrid_retriever.py -v
-
-# Test Cross-Encoder Reranker
-pytest tests/test_reranker.py -v
-
-# Test Generator Prompt Assembly & Mock LLM
-pytest tests/test_generator.py -v
+```bash
+npm run seed
 ```
 
 ---
@@ -229,10 +199,10 @@ All endpoints are versioned under `/api/v1`:
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/` or `/dashboard` | Serves the interactive Web Dashboard Cockpit. |
+| `GET` | `/` or `/dashboard` | Serves the interactive React Dashboard. |
 | `GET` | `/docs` | Interactive Swagger UI documentation. |
-| `GET` | `/api/v1/health` | Health status of API, ChromaDB vector store, and Groq LLM. |
-| `POST` | `/api/v1/retrieve` | Semantic candidate search & cross-encoder reranking only. |
+| `GET` | `/api/v1/health` | Health status of API, database, and Groq LLM. |
+| `POST` | `/api/v1/retrieve` | Semantic candidate search & precision reranking only. |
 | `POST` | `/api/v1/ask` | Synchronous RAG solution generation with grounded sources. |
 | `POST` / `GET` | `/api/v1/ask/stream` | Real-time Server-Sent Events (SSE) token streaming. |
 
@@ -245,7 +215,7 @@ curl -X POST http://localhost:8000/api/v1/retrieve \
   -d '{"query": "Two Sum", "top_k": 3}'
 ```
 
-#### Full Solution Generation:
+#### Full Grounded Solution Generation:
 ```bash
 curl -X POST http://localhost:8000/api/v1/ask \
   -H "Content-Type: application/json" \
@@ -254,87 +224,49 @@ curl -X POST http://localhost:8000/api/v1/ask \
 
 ---
 
-## Rebuilding the Vector Database (Optional)
-
-The pre-indexed ChromaDB vector store is included out-of-the-box. If you ever want to rebuild or re-index the dataset:
-
-```powershell
-# 1. Clean raw LeetCode problems
-python ingestion/clean_data.py
-
-# 2. Chunk problems into semantic segments
-python ingestion/chunk_data.py
-
-# 3. Create embeddings and build ChromaDB
-python ingestion/create_vectorstore.py
-```
-
----
-
 ## Project Directory Structure
 
 ```
-ASK-dsa/
-├── .env.example              # Template configuration file
-├── .gitignore                # Production gitignore (excludes secrets, venvs, caches)
-├── requirements.txt          # Python dependencies
-├── cli.py                    # Terminal interactive assistant
-├── test_generator.py         # Standalone generation script
-├── test_streaming.py         # Standalone streaming script
+ask-dsa/
+├── backend/                       # Express & Node.js Production API
+│   ├── config/                    # Config & MongoDB connector
+│   │   ├── config.js
+│   │   └── db.js
+│   ├── models/                    # Mongoose Data Models
+│   │   ├── Problem.js             # Problem & chunk schema
+│   │   └── QueryHistory.js        # Telemetry & query history schema
+│   ├── routes/                    # Modular API Routes
+│   │   ├── health.js              # /api/v1/health
+│   │   ├── retrieval.js           # /api/v1/retrieve
+│   │   └── chat.js                # /api/v1/ask & /api/v1/ask/stream
+│   ├── services/                  # Core RAG Retrieval & Generation Services
+│   │   ├── queryModifier.js       # Query cleaning & topic detector
+│   │   ├── adaptiveRag.js         # Query strategy classifier
+│   │   ├── bm25.js                # Multi-field BM25Okapi implementation
+│   │   ├── hybridRetriever.js     # Hybrid search & RRF candidate fusion
+│   │   └── generator.js           # Grounded prompt template & Groq LLM client
+│   ├── scripts/
+│   │   └── seed.js                # MongoDB seeding script
+│   ├── tests/                     # 19 Automated Jest Tests
+│   └── server.js                  # Express application entrypoint
 │
-├── app/                      # Production FastAPI Application
-│   ├── __init__.py
-│   ├── main.py               # App entrypoint, static mounting & middleware
-│   ├── config.py             # Pydantic v2 Settings (.env loader)
-│   ├── dependencies.py       # Singleton providers & SlowAPI rate limiter
-│   ├── exceptions.py         # Custom exceptions & RFC 7807 error envelopes
-│   ├── routers/              # Modular API routes
-│   │   ├── health.py         # /api/v1/health
-│   │   ├── retrieval.py      # /api/v1/retrieve
-│   │   └── chat.py           # /api/v1/ask & /api/v1/ask/stream
-│   ├── schemas/              # Pydantic v2 Request & Response models
-│   ├── services/             # Orchestration services (Retrieval & Generation)
-│   └── static/               # Web Dashboard (Zero npm build required)
-│       ├── index.html        # UI Cockpit (Tailwind, Geist, JetBrains Mono)
-│       ├── app.js            # SSE streaming client, hotkeys, copy utility
-│       └── style.css         # Markdown styling & custom animations
+├── frontend/                      # React (Vite + Tailwind CSS) Dashboard
+│   ├── src/
+│   │   ├── App.jsx                # Main Cockpit UI component
+│   │   ├── index.css              # Tailwind & markdown styles
+│   │   └── main.jsx               # React entrypoint
+│   ├── index.html
+│   ├── tailwind.config.js
+│   └── vite.config.js
 │
-├── retrieval/                # Core RAG Retrieval & Reasoning Engine
-│   ├── hybrid_retriever.py   # Multi-Field BM25 + ChromaDB Dense + RRF
-│   ├── query_modifier.py     # Regex topic extraction & conversational cleaner
-│   ├── adaptive_rag.py       # Routing strategy classifier
-│   ├── reranker.py           # Cross-Encoder (ms-marco-MiniLM-L-6-v2)
-│   ├── generator.py          # Grounded prompt template & Groq LLM interface
-│   └── display.py            # Console output formatter
-│
-├── data/                     # Dataset & Chunks
+├── data/                          # Dataset & Chunks
 │   ├── leetcode_problems.json
 │   ├── cleaned_problems.json
 │   └── problem_chunks.json
 │
-├── chroma_db/                # Local ChromaDB Vector Store
-├── ingestion/                # Data cleaning, chunking, and embedding scripts
-├── evaluation/               # Benchmark evaluation & failure analysis
-└── tests/                    # Complete 29-test Automated Test Suite
-    ├── test_api.py           # API & Dashboard integration tests
-    ├── test_query_modifier.py
-    ├── test_adaptive_rag.py
-    ├── test_hybrid_retriever.py
-    ├── test_reranker.py
-    ├── test_generator.py
-    └── test_display.py
+├── package.json                   # Root workspace orchestration
+└── README.md                      # Documentation
 ```
-
----
-
-## Windows Troubleshooting
-
-| Issue | Solution |
-| :--- | :--- |
-| **`Activate.ps1 cannot be loaded because running scripts is disabled`** | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` in PowerShell before activating `.venv`. |
-| **`UnicodeEncodeError / cp1252 character errors`** | Ensure your terminal uses UTF-8. All scripts in ASK-DSA automatically configure UTF-8 output encoding. |
-| **`GROQ_API_KEY is not set`** | Verify your `.env` file exists in the repository root and contains a valid key: `GROQ_API_KEY=gsk_...` |
-| **Hugging Face Hub rate limit warning** | You can optionally set `HF_TOKEN=hf_...` in your `.env` file to remove unauthenticated download warnings. |
 
 ---
 
